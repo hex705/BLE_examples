@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Multiple BLE characteristics Simple DOM with p5.ble.js</title>
+      <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.7.2/addons/p5.dom.min.js"></script>
+    <script
+      src="https://unpkg.com/p5ble@0.0.7/dist/p5.ble.js"
+      type="text/javascript"
+    ></script>
+
+  </head>
+
+  <body>
+
+    <h1>Sensor Scan Arduino Nano BLE sense (Simple DOM)</h1>
+
+   <section class = "sourceLinks">
+     <a href="url"> source code - js </a> </br>
+     <a href="url"> source code - arduino </a>
+   </section>
+
+    <section class = "dataFromArduino">
+
+      <p class="label"> X,Y,Z send as individual characteristics</p>
+      <div class="dataElement"> accX :: <span id = "accX"> </span></div>
+      <div class="dataElement"> accY :: <span id = "accY"> </span></div>
+      <div class="dataElement"> accZ :: <span id = "accZ"> </span></div>
+      </br>
+
+      <p class="label"> X,Y,Z :: All at once from FLOAT[]</p>
+      <div class="dataElement"> accAX :: <span id = "accAX"> </span></div>
+      <div class="dataElement"> accAY :: <span id = "accAY"> </span></div>
+      <div class="dataElement"> accAZ :: <span id = "accAZ"> </span></div>
+      </br>
+
+      <p class="label"> X,Y,Z :: All at once from STRING </p>
+      <p> note arduino does some rounding on this one  </p>
+      <p> the arduino spec only allows for 6 or 7 sigfigs -- so this gts truncated at roughly 10 decimals</p>
+      <p> i am not sure where the truncation happens - in arduino String (float, decimals) has a 33 byte buffer </p>
+      <div class="dataElement"> accAXS :: <span id = "accAXs"> </span></div>
+      <div class="dataElement"> accAYS :: <span id = "accAYs"> </span></div>
+      <div class="dataElement"> accAZS :: <span id = "accAZs"> </span></div>
+      </br>
+
+      <p class="label"> X,Y,Z :: All at once from CHAR[] </p>
+      <div class="dataElement"> accAXca :: <span id = "accAXca"> </span></div>
+      <div class="dataElement"> accAYca :: <span id = "accAYca"> </span></div>
+      <div class="dataElement"> accAZca :: <span id = "accAZca"> </span></div>
+      </br>
+
+      <p class= "label"> Compare :: zero means same == yay!</p>
+      <div class="dataElement"> X compare :: <span id = "compX"> </span></div>
+      <div class="dataElement"> Y compare :: <span id = "compY"> </span></div>
+      <div class="dataElement"> Z compare :: <span id = "compZ"> </span></div>
+
+  </section>
+
+    <script src="sketch.js"></script>
+  </body>
+</html>
