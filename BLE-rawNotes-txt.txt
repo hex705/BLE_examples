@@ -1,0 +1,123 @@
+- BLE notes — March 2021 
+- this was a tough journey — but i have 3 /4 system now working
+- start somewhere:
+	- https://create.arduino.cc/projecthub/jingwen_zhu/getting-started-with-p5-ble-js-using-arduino-nano-33-ble-120ea6
+- general links that helped
+	- https://rootsaid.com/arduino-ble-example/
+	- sending array
+		- https://github.com/ITPNYU/p5.ble.js/blob/master/examples/multipleCharIMU/arduino-sketches/ArduinoBLE_IMU/ArduinoBLE_IMU.ino
+	- circular buffer — not valuable here but in general — good to know
+		- https://en.wikipedia.org/wiki/Circular_buffer
+	- using union and strict to organize in stead of array — KLAUS_K EX
+		- https://forum.arduino.cc/index.php?topic=659562.32
+	- strings and graphs in in BLE ** useful beyond this issue — maybe plot with p5- from xBee?
+		- https://armsp.github.io/nano-33-ble-gen/webbluetooth_plotting.html
+- PATHWAY ?
+	- get these into git hub and make a pages page for them ?
+	- lots of links — to outward facing pages then a net art page .
+	- examples need raw code ( GitHub) 
+	- code explanation ( gitPages - videos ?)
+	- reason (net art page)
+- BENEFITS of BLE
+	- your phone has it maybe your laptop — that’s all i got
+- 
+- limits of BLE
+	- it is point to point — no mesh ( yet — its in the standard but not implemented on arduino’s )
+	- you have to pair — user task — so data may never go anywhere
+	- there is no UART — both sides have to set up memory for messages
+- 
+- Structure of BLE
+	- MESSAGE STRUCTURE
+		- GATT — highest level — Generic attribute profile
+			- SERVICE  — 1 device may have many series — only one is advertised ( other can be searched) — check
+				- CHARACTERISTIC — can have many they are added to services
+					- each characteristic has a type — you must be aware of type sizes 
+					- generally only one data point per characteristic — this is inefficient network usage (time)— so you may want to avoid — but multi dat has limits 
+					- complex type characteristics can be created — need to know size of variable in play — can use this for strings and arrays 
+					- size limit of messages — varies depending on source appears to be around 20 to 33 bytes ( have seen as many as 512 — have not tested)
+	- TOPOLOGY
+		- NUMBER OF CONNECTIONS — the server client model suggests there can be many connections — but hardware limits this — some chips allow a few, rPis 10, Arduino BLE ??? 
+		* BLE is point to point
+		* PUB-SUB MODEL — the structure follows pub sub model with two kinds of devices
+	- WHEN DOES DATA ACTUALLY GO?
+		- flow control in BLE is not same as UART.
+		- peripherals (servers) write data to local (own) memory — and sends it ONLY if client asks for it
+		- clients can read data or write to peripheral if given permission by said peripheral —
+		- data on a peripheral can be “taken” by clients when needed ( explore this more )
+	- UUID
+		- every service and each characteristic needs a unique  UUID
+		- OSX — uuidgen — on command lline
+			- uuidgen <enter>
+			- get a UUID back
+		- ONLINE :   https://www.uuidgenerator.net/ — kets you make several at once — they will not be sequentional — you can do that manually if you like
+	- MAKING IT WORK — ARDUINO
+		- Init
+			- library include
+			- service UUID
+			- characteristics with UUID, options, size of data 
+				- — size is not needed on fixed or typed characteristics (eg int and float type aruino knows these sizes)
+			- setup
+				- launch radio
+					- dev name
+					- local name (difference ??)
+					- advertise service
+					- add charcteristics
+					- write init value to characteristics ( note these have to be read by centrals )
+					- advertise your service over BLE
+	- DATA structure arduino
+		- SENDING SINGLE VALUES — match type of data to characteristic type simple
+		- sending SINGLE FLOATS
+			- i had some trouble here — but it was on parse side — read ALL the docs!
+				-  first floats are 4 bytes long and there is some computer architecture called ENDIAN can mess up transmits when sender and receiver do not have same endian format.  Endian has 2 flavours — blame gulliver and his damn travels (1) .  in computers it has to do with which byte (memory location) of a big number gets read last. roughly — do we read left to right, or right to left.
+					- good hex to float calculator that provides endian control   https://gregstoll.com/~gregstoll/floattohex/
+					- (1)   <https://searchnetworking.techtarget.com/definition/big-endian-and-little-endian#:~:text=Big%2Dendian%20and%20little%2Dendian%20derive%20from%20Jonathan%20Swift's%20Gulliver's,eggs%20at%20the%20small%20end>https://searchnetworking.techtarget.com/definition/big-endian-and-little-endian#:~:text=Big%2Dendian%20and%20little%2Dendian%20derive%20from%20Jonathan%20Swift's%20Gulliver's,eggs%20at%20the%20small%20end.
+			- ARDUINO writes SINGLE ints and floats just fine (some forum posts point out issue with lib — find)
+			- PARSING — in p5.BLE  — you need to be aware that basic parse of the p5BLE lib does not handle arduino floats well.  
+			* if you add a notification handler in p5.BLE — using the standard method for single ints —
+		- SENDING MULTI FLOATS //STRINGS
+			* ARDUINO can write multi floats and strings  IFF you manage the size of the aggregate data being sent
+			- MULTIPLE FLOATS — see parsing above for basics … 
+				- def your characteristic properly — generic type — handle memory manually (UUID permissions
+					- eg :: BLECharacteristic accCharacteristic  (“UUID _here, BLERead | BLENotify, sizeof(float) * 3);
+					- this will set up a generic typed characteristic and allow it to carry 3 floats
+					- IMPORTANT floats are 4 bytes each so totally size of this example  is 12 bytes
+					- there is a 20 byte limit
+					- SEND your data:
+						- AS ARRAY
+							- https://github.com/ITPNYU/p5.ble.js/blob/master/examples/multipleCharIMU/arduino-sketches/ArduinoBLE_IMU/ArduinoBLE_IMU.ino
+							- if you capture data as array — say for built in IMU  float accNew[3];
+							- read sensor load array with X,Y,Z
+							- send it with : accCharacteristic.writeValue(accNew, sizeof(accNew));// where accNew is array of 3 floats (4 bytes each), sizeof(AccNew) = 12 (3*4) and accCharacteristic is of type BLECharacteristic
+							- unpack it individually or as a group of 3 of unpack as group use offset to move along the bytes sent ….
+							- eg  see(2) 
+								-  accAX_value= data.getFloat32(0,true);// 4 byte because ard float is 4bytes and we therefore get float32 (32 bits = 4 bytes)
+								  accAY_value= data.getFloat32(4,true);
+								  accAZ_value= data.getFloat32(8,true);
+								
+								- (2)   https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat32
+							- AS STRING
+								- https://github.com/armsp/nano-33-ble-gen/blob/master/bluetooth/real_time_plotting/accelerometer_xyz_plotting/accelerometer_xyz_plotting.ino
+								- was not so easy 
+									- Arduino will send a String
+										- you can set the number of decimals by converting float to string with String(float,decimalPlaces);
+										- thus: float f = 0.123456 —> String s = String ( f,3) —> 0.123
+										- note for sending the string s, there are 5 bytes.  zero, period, one, two,three
+										- so this is longer than needling a float in 4 byte with lower resolution — a 4 byte float sends 13 decimals
+										- so 10 decimal float  — lets be reasonable — in range of -1.0 to 1.0 take anywhere from 12(positive float) to13(negative sign + float) bytes
+										- so three floats with a delimiter at 10decimals takes 38bytes — instead of 12 bytes in the array.  use the array.
+									- on the JS side 
+										- we need to do some converting receive the float in a p5 sketch
+										- the incoming type with custom parse is a dataView.  this is a generic binary set of bytes— we need to convert it to string
+										- sol’n https://gist.github.com/skratchdot/e095036fad80597f1c1a
+											- function ab2str(buf) {
+											  return new TextDecoder().decode(buf);
+											}
+										- this returns a string — split it on delimiters ( any delimiter will do == try commas in arduino and change this 
+											- let acceleration = stringData.split('|'); // delimiter
+										- this yields array of strings == convert floats:
+											- parseFloat(String s);
+											- of in fxn
+											- function pf(someString){
+											  return parseFloat(someString);
+											}
+											- this fxn or line above returns a float of the string — you can math it!
