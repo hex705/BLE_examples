@@ -119,7 +119,7 @@ function handleChangeAccY(data){
   let accY_inner = document.getElementById("accY");
   accY_inner.innerHTML = accY_value ;
 }
-
+// recieve single float from float characteristic
 function handleChangeAccZ(data){
   //  ax = data.getFloat32(0, true); (byte offset, endianess :: true = little // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat32
   accZ_value= data.getFloat32(0,true);
@@ -128,6 +128,7 @@ function handleChangeAccZ(data){
   accZ_inner.innerHTML = accZ_value ;
 }
 
+// receive array of floats from generic charcateristic
 function handleChangeAccAll(data){
   // https://gregstoll.com/~gregstoll/floattohex/
   //  ax = data.getFloat32(0, true); (byte offset, endianess :: true = little // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/DataView/getFloat32
@@ -167,7 +168,7 @@ function pf(someString){
   return parseFloat(someString);
 }
 
-
+// data arrives as string
 function handleChangeAccString(data){
   // side reading
   //https://stackoverflow.com/questions/6965107/converting-between-strings-and-arraybuffers
